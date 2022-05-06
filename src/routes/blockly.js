@@ -1,6 +1,7 @@
 const router = require('express').Router();
+const { exec } = require('child_process');
 const { body, validationResult } = require('express-validator');
-const fs = require('fs').promises;
+const fs = require('fs'); 
 const path = require('path');
 
 router.get('/', (req, res) => {
@@ -10,6 +11,12 @@ router.get('/', (req, res) => {
 const getUserDir = (taqId) => {
   const rootDir = path.dirname(require.main.filename);
   return `${rootDir}/../storage/${taqId}`;
+}
+
+const isExists = async (filePath) => {
+  return fs.promises.access(filePath, fs.constants.R_OK)
+    .then(() => true)
+    .catch(() => false)
 }
 
 router.post(
@@ -34,12 +41,12 @@ router.post(
 
       const userDir = getUserDir(taqId);
       const fileDir = `${userDir}/contracts`;
-      await fs.mkdir(fileDir, { recursive: true });
+      await fs.promises.mkdir(fileDir, { recursive: true });
 
       const filePath = `${fileDir}/${name}.py`;
       console.log('filePath', filePath);
 
-      await fs.writeFile(filePath, code);
+      await fs.promises.writeFile(filePath, code);
 
       res.json({ success: true })
     } catch (ex) {
@@ -69,16 +76,29 @@ router.post(
       const filePath = `${userDir}/contracts/${name}.py`;
       console.log('filePath', filePath);
 
-      if (!await fs.exists(filePath)) {
+      if (!await isExists(filePath)) {
         return res.status(400).json({ message: 'File does not exists'});
       }
 
       const configPath = `${userDir}/.taq/config.json`;
-      if (!await fs.exists(configPath)) {
+      if (!await isExists(configPath)) {
         await initTaq();
       }
 
+      exec('ls -lh', (error, stdout, stderr) => {
+        if (error) {
+          console.error(`error: ${error.message}`);
+          return;
+        }
 
+        if (stderr) {
+          console.error(`stderr: ${stderr}`);
+          return;
+        }
+
+        console.log(`stdout:\n${stdout}`);
+        return res.json({ success: true })
+      });
 
     } catch (ex) {
       console.error(ex);
