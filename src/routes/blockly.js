@@ -85,7 +85,9 @@ router.post(
         await initTaq();
       }
 
-      exec('ls -lh', (error, stdout, stderr) => {
+      const command = `taq compile --configDir ./storage/${taqId}/.taq ${name}.py`
+      console.log('command', command)
+      exec(command, (error, stdout, stderr) => {
         if (error) {
           console.error(`error: ${error.message}`);
           return;
