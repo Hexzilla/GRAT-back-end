@@ -1,8 +1,10 @@
-var express = require('express'),
-    bodyParser = require('body-parser'),
-    session = require('express-session'),
-    cors = require('cors'),
-    errorhandler = require('errorhandler');
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const errorhandler = require('errorhandler');
+const { v4: uuidv4 } = require('uuid');
 
 var isProduction = process.env.NODE_ENV === 'production';
 
@@ -20,11 +22,25 @@ app.use(require('method-override')());
 app.use(express.static(__dirname + '/public'));
 
 app.use(session({
-    secret: 'Xyameshgyrtjjasdjfaikay18akjaKgasdrS37x63kjoguy9827435hwofia', 
+    secret: 'Xyameshgyrtj7ikagasdrS37x6jasdjfay18akjaK82Ye3kjoguy9nsd7435hwofia', 
     cookie: { maxAge: 60000 }, 
     resave: false, 
     saveUninitialized: false 
 }));
+
+const cookieSecret = 'XyameshgyrtjrS37x63kjogXtemsdjfaikay18akjaKgasd98Oyem27435hwofia';
+app.use(cookieParser(cookieSecret));
+
+// set a cookie
+app.use(function (req, res, next) {
+  const cookie = req.cookies.taqId;
+  if (cookie === undefined) {
+    //res.cookie('taqId', uuidv4(), { maxAge: 900000, httpOnly: true });
+    res.cookie('taqId', uuidv4(), { httpOnly: true });
+    console.log('cookie created successfully');
+  }
+  next();
+});
 
 if (!isProduction) {
   app.use(errorhandler());
