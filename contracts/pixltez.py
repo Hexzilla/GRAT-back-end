@@ -1,8 +1,8 @@
 import smartpy as sp
 FA2 = sp.io.import_script_from_url("https://smartpy.io/templates/fa2_lib.py")
-Config = sp.io.import_script_from_url("file:./contracts/config.py")
 
-admin = sp.address(Config.ADMIN)
+ADMIN = "tz1hmPbNNcaH91bkrYDeyAbUmYzjbPtJjPQR"
+admin = sp.address(ADMIN)
 token = FA2.make_metadata(name="PiXLtez", decimals=2, symbol="PXL")
 
 class PiXLTez(
