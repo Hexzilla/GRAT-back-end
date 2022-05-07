@@ -82,7 +82,9 @@ router.post(
 
       const configPath = `${userDir}/.taq/config.json`;
       if (!await isExists(configPath)) {
-        await initTaq();
+        if (!await initTaq()) {
+          return res.status(400).json({ message: 'Failed to initialize taq'});
+        }
       }
 
       const command = `taq compile --configDir ./storage/${taqId}/.taq ${name}.py`
@@ -109,8 +111,26 @@ router.post(
 });
 
 const initTaq = async (dir) => {
+  try {
+    const taqDir = `${dir}/.taq`;
+    await fs.promises.mkdir(taqDir, { recursive: true });
+    await fs.promises.mkdir(`${dir}/contracts`, { recursive: true });
+    await fs.promises.mkdir(`${dir}/tests`, {recursive: true });
+    await fs.promises.mkdir(`${dir}/artifacts`, {recursive: true });
 
+    await fs.promises.copyFile('../../.taq/state.json', `${dir}/.taq/state.json`);
+
+    const taqconf = {...configData};
+    taqconf.contractsDir = `${dir}/contracts`;
+    taqconf.testsDir = `${dir}/tests`;
+    taqconf.artifactsDir = `${dir}/artifacts`;
+    await fs.promises.writeFile(`${dir}/.taq/config.json`, JSON.stringify(taqconf));
+    
+    return true;
+  } catch (ex) {
+    console.error(ex);
+    return false;
+  }
 }
-
 
 module.exports = router;
