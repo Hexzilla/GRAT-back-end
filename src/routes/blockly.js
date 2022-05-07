@@ -1,16 +1,21 @@
+const path = require('path');
 const router = require('express').Router();
 const { exec } = require('child_process');
 const { body, validationResult } = require('express-validator');
 const fs = require('fs'); 
-const path = require('path');
+const configData = require('../../.taq/config.json');
 
 router.get('/', (req, res) => {
   res.json({ success: true })
 });
 
-const getUserDir = (taqId) => {
+const getRootDir = () => {
   const rootDir = path.dirname(require.main.filename);
-  return `${rootDir}/../storage/${taqId}`;
+  return path.dirname(rootDir);
+}
+
+const getUserDir = (taqId) => {
+  return `${getRootDir()}/storage/${taqId}`;
 }
 
 const isExists = async (filePath) => {
@@ -82,7 +87,7 @@ router.post(
 
       const configPath = `${userDir}/.taq/config.json`;
       if (!await isExists(configPath)) {
-        if (!await initTaq()) {
+        if (!await initTaq(taqId)) {
           return res.status(400).json({ message: 'Failed to initialize taq'});
         }
       }
@@ -110,21 +115,23 @@ router.post(
     }
 });
 
-const initTaq = async (dir) => {
+const initTaq = async (taqId) => {
   try {
-    const taqDir = `${dir}/.taq`;
-    await fs.promises.mkdir(taqDir, { recursive: true });
-    await fs.promises.mkdir(`${dir}/contracts`, { recursive: true });
-    await fs.promises.mkdir(`${dir}/tests`, {recursive: true });
-    await fs.promises.mkdir(`${dir}/artifacts`, {recursive: true });
+    console.log('initTaq', taqId);
+    const userDir = getUserDir(taqId);
+    await fs.promises.mkdir(`${userDir}/.taq`, { recursive: true });
+    await fs.promises.mkdir(`${userDir}/contracts`, { recursive: true });
+    await fs.promises.mkdir(`${userDir}/tests`, {recursive: true });
+    await fs.promises.mkdir(`${userDir}/artifacts`, {recursive: true });
 
-    await fs.promises.copyFile('../../.taq/state.json', `${dir}/.taq/state.json`);
+    const rootDir = getRootDir();
+    await fs.promises.copyFile(`${rootDir}/.taq/state.json`, `${userDir}/.taq/state.json`, fs.constants.COPYFILE_FICLONE);
 
     const taqconf = {...configData};
-    taqconf.contractsDir = `${dir}/contracts`;
-    taqconf.testsDir = `${dir}/tests`;
-    taqconf.artifactsDir = `${dir}/artifacts`;
-    await fs.promises.writeFile(`${dir}/.taq/config.json`, JSON.stringify(taqconf));
+    taqconf.contractsDir = `./storage/${taqId}/contracts`;
+    taqconf.testsDir = `./storage/${taqId}/tests`;
+    taqconf.artifactsDir = `./storage/${taqId}/artifacts`;
+    await fs.promises.writeFile(`${userDir}/.taq/config.json`, JSON.stringify(taqconf, null, 2));
     
     return true;
   } catch (ex) {
