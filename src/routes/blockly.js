@@ -97,16 +97,17 @@ router.post(
       exec(command, (error, stdout, stderr) => {
         if (error) {
           console.error(`error: ${error.message}`);
+          return res.json({ success: false, message: error.message })
           return;
         }
 
         if (stderr) {
           console.error(`stderr: ${stderr}`);
-          return;
+          return res.json({ success: false, message: stderr })
         }
 
         console.log(`stdout:\n${stdout}`);
-        return res.json({ success: true })
+        return res.json({ success: true, data: stdout })
       });
 
     } catch (ex) {
