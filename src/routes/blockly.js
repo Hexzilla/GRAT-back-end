@@ -35,7 +35,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const taqId = req.cookies.taqId;//'4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
+      const taqId = '4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
       console.log('taqId', taqId);
       if (!taqId) {
         return res.status(400).json({ message: 'Invalid taqId'});
@@ -46,12 +46,16 @@ router.post(
 
       const userDir = getUserDir(taqId);
       const fileDir = `${userDir}/contracts`;
-      await fs.promises.mkdir(fileDir, { recursive: true });
+      const result = await fs.promises.mkdir(fileDir, { recursive: true });
+      console.log('mkdir-result', result);
 
       const filePath = `${fileDir}/${name}.py`;
       console.log('filePath', filePath);
 
-      await fs.promises.writeFile(filePath, code);
+      const buff = Buffer.from(code, 'base64');
+      const codestr = buff.toString('utf-8');
+
+      await fs.promises.writeFile(filePath, codestr);
 
       res.json({ success: true })
     } catch (ex) {
@@ -70,7 +74,7 @@ router.post(
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const taqId = req.cookies.taqId;//'4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
+      const taqId = '4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
       console.log('taqId', taqId);
       if (!taqId) {
         return res.json({ success: false, message: 'Invalid taqId'});
