@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const errorhandler = require('errorhandler');
 const { v4: uuidv4 } = require('uuid');
 
+require('dotenv').config()
 var isProduction = process.env.NODE_ENV === 'production';
 
 // Create global app object
