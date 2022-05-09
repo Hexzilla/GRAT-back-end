@@ -67,6 +67,7 @@ router.post(
 router.post(
   '/compile', 
   body('name').isString(),
+  body('code').isString(),
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -80,10 +81,21 @@ router.post(
         return res.json({ success: false, message: 'Invalid taqId'});
       }
 
-      const {name} = req.body;
+      const {name, code} = req.body;
+      console.log('name-code', name, code);
+      
       const userDir = getUserDir(taqId);
-      const filePath = `${userDir}/contracts/${name}.py`;
+      const fileDir = `${userDir}/contracts`;
+      const result = await fs.promises.mkdir(fileDir, { recursive: true });
+      console.log('mkdir-result', result);
+
+      const filePath = `${fileDir}/${name}.py`;
       console.log('filePath', filePath);
+
+      const buff = Buffer.from(code, 'base64');
+      const codestr = buff.toString('utf-8');
+
+      await fs.promises.writeFile(filePath, codestr);
 
       if (!await isExists(filePath)) {
         return res.status(400).json({ message: 'File does not exists'});

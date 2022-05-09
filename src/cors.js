@@ -2,7 +2,6 @@ const cors = require('cors');
 
 const getApplicationAllowedOrigins = () => {
 	const env = process.env.NODE_ENV;
-
 	switch (env) {
 		case 'development':
 			return [
