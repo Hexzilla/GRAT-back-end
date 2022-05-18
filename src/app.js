@@ -1,17 +1,21 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const errorhandler = require('errorhandler');
 const { v4: uuidv4 } = require('uuid');
 
+require('dotenv').config()
 var isProduction = process.env.NODE_ENV === 'production';
 
 // Create global app object
 var app = express();
 
-app.use(cors());
+app.use(require('./cors'));
+// app.use(cors({
+//   origin: '*'
+// }));
 
 // Normal express config defaults
 app.use(require('morgan')('dev'));

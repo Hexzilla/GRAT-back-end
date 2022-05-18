@@ -1,16 +1,21 @@
+const path = require('path');
 const router = require('express').Router();
 const { exec } = require('child_process');
 const { body, validationResult } = require('express-validator');
 const fs = require('fs'); 
-const path = require('path');
+const configData = require('../../.taq/config.json');
 
 router.get('/', (req, res) => {
   res.json({ success: true })
 });
 
-const getUserDir = (taqId) => {
+const getRootDir = () => {
   const rootDir = path.dirname(require.main.filename);
-  return `${rootDir}/../storage/${taqId}`;
+  return path.dirname(rootDir);
+}
+
+const getUserDir = (taqId) => {
+  return `${getRootDir()}/storage/${taqId}`;
 }
 
 const isExists = async (filePath) => {
@@ -41,12 +46,16 @@ router.post(
 
       const userDir = getUserDir(taqId);
       const fileDir = `${userDir}/contracts`;
-      await fs.promises.mkdir(fileDir, { recursive: true });
+      const result = await fs.promises.mkdir(fileDir, { recursive: true });
+      console.log('mkdir-result', result);
 
       const filePath = `${fileDir}/${name}.py`;
       console.log('filePath', filePath);
 
-      await fs.promises.writeFile(filePath, code);
+      const buff = Buffer.from(code, 'base64');
+      const codestr = buff.toString('utf-8');
+
+      await fs.promises.writeFile(filePath, codestr);
 
       res.json({ success: true })
     } catch (ex) {
@@ -58,6 +67,7 @@ router.post(
 router.post(
   '/compile', 
   body('name').isString(),
+  body('code').isString(),
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -71,10 +81,21 @@ router.post(
         return res.status(400).json({ success: false, message: 'Invalid taqId'});
       }
 
-      const {name} = req.body;
+      const {name, code} = req.body;
+      console.log('name-code', name, code);
+      
       const userDir = getUserDir(taqId);
-      const filePath = `${userDir}/contracts/${name}.py`;
+      const fileDir = `${userDir}/contracts`;
+      const result = await fs.promises.mkdir(fileDir, { recursive: true });
+      console.log('mkdir-result', result);
+
+      const filePath = `${fileDir}/${name}.py`;
       console.log('filePath', filePath);
+
+      const buff = Buffer.from(code, 'base64');
+      const codestr = buff.toString('utf-8');
+
+      await fs.promises.writeFile(filePath, codestr);
 
       if (!await isExists(filePath)) {
         return res.status(400).json({ message: 'File does not exists'});
@@ -82,7 +103,9 @@ router.post(
 
       const configPath = `${userDir}/.taq/config.json`;
       if (!await isExists(configPath)) {
-        await initTaq();
+        if (!await initTaq(taqId)) {
+          return res.status(400).json({ message: 'Failed to initialize taq'});
+        }
       }
 
       const command = `taq compile --configDir ./storage/${taqId}/.taq ${name}.py`
@@ -90,16 +113,17 @@ router.post(
       exec(command, (error, stdout, stderr) => {
         if (error) {
           console.error(`error: ${error.message}`);
+          return res.json({ success: false, message: error.message })
           return;
         }
 
         if (stderr) {
           console.error(`stderr: ${stderr}`);
-          return;
+          return res.json({ success: false, message: stderr })
         }
 
         console.log(`stdout:\n${stdout}`);
-        return res.json({ success: true })
+        return res.json({ success: true, data: stdout })
       });
 
     } catch (ex) {
@@ -108,9 +132,29 @@ router.post(
     }
 });
 
-const initTaq = async (dir) => {
+const initTaq = async (taqId) => {
+  try {
+    console.log('initTaq', taqId);
+    const userDir = getUserDir(taqId);
+    await fs.promises.mkdir(`${userDir}/.taq`, { recursive: true });
+    await fs.promises.mkdir(`${userDir}/contracts`, { recursive: true });
+    await fs.promises.mkdir(`${userDir}/tests`, {recursive: true });
+    await fs.promises.mkdir(`${userDir}/artifacts`, {recursive: true });
 
+    const rootDir = getRootDir();
+    await fs.promises.copyFile(`${rootDir}/.taq/state.json`, `${userDir}/.taq/state.json`, fs.constants.COPYFILE_FICLONE);
+
+    const taqconf = {...configData};
+    taqconf.contractsDir = `./storage/${taqId}/contracts`;
+    taqconf.testsDir = `./storage/${taqId}/tests`;
+    taqconf.artifactsDir = `./storage/${taqId}/artifacts`;
+    await fs.promises.writeFile(`${userDir}/.taq/config.json`, JSON.stringify(taqconf, null, 2));
+    
+    return true;
+  } catch (ex) {
+    console.error(ex);
+    return false;
+  }
 }
-
 
 module.exports = router;
