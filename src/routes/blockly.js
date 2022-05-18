@@ -30,7 +30,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const taqId = '4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
+      const taqId = uuidv4();//'4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
       console.log('taqId', taqId);
       if (!taqId) {
         return res.status(400).json({ message: 'Invalid taqId'});
@@ -65,10 +65,10 @@ router.post(
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const taqId = '4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
+      const taqId = uuidv4();//'4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
       console.log('taqId', taqId);
       if (!taqId) {
-        return res.json({ success: false, message: 'Invalid taqId'});
+        return res.status(400).json({ success: false, message: 'Invalid taqId'});
       }
 
       const {name} = req.body;
