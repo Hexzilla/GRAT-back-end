@@ -112,19 +112,17 @@ router.post(
       const command = `taq compile --configDir ./storage/${taqId}/.taq ${name}.py`
       console.log('command', command)
       exec(command, (error, stdout, stderr) => {
-        console.log(`stdout:\n${stdout}`);
-
         if (error) {
           console.error(`error: ${error.message}`);
           return res.json({ success: false, message: error.message })
-          return;
         }
 
-        if (stderr) {
+        if (stderr && stderr.trim() > 0) {
           console.error(`stderr: ${stderr}`);
           return res.json({ success: false, message: stderr })
         }
 
+        console.log(`stdout:\n${stdout}`);
         return res.json({ success: true, data: stdout })
       });
 
