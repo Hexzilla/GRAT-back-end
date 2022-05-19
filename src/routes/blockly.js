@@ -186,7 +186,7 @@ router.post(
         return res.json({ success: false, message: 'File does not exists' })
       }
 
-      const command = `SmartPy.sh originate-contract --code ${fileDir}/step_000_cont_0_contract.tz --storage ${fileDir}/step_000_cont_0_storage.tz --rpc https://hangzhounet.smartpy.io`
+      const command = `~/smartpy-cli/SmartPy.sh originate-contract --code ${fileDir}/step_000_cont_0_contract.tz --storage ${fileDir}/step_000_cont_0_storage.tz --rpc https://hangzhounet.smartpy.io`
       console.log('command', command)
       exec(command, (error, stdout, stderr) => {
         if (error) {
