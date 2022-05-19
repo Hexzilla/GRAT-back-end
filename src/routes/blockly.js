@@ -124,7 +124,13 @@ router.post(
         }
 
         console.log(`stdout:\n${stdout}`);
-        return res.json({ success: true, data: stdout })
+        return res.json({
+          success: true,
+          data: {
+            taqId,
+            output: stdout,
+          }
+        })
       });
 
     } catch (ex) {
