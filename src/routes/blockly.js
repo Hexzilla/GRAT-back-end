@@ -76,7 +76,7 @@ router.post(
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const taqId = uuidv4();//'4d443421-46da-492f-b8f6-31fc8d7b09bb';//req.cookies.taqId;
+      const taqId = req.cookies.taqId; //uuidv4();//'4d443421-46da-492f-b8f6-31fc8d7b09bb';
       console.log('taqId', taqId);
       if (!taqId) {
         return res.status(400).json({ success: false, message: 'Invalid taqId'});
@@ -156,5 +156,65 @@ const initTaq = async (taqId) => {
     return false;
   }
 }
+
+router.get(
+  '/deploy/:name', 
+  async (req, res) => {
+    try {
+      const taqId = req.cookies.taqId;
+      console.log('taqId', taqId);
+      if (!taqId) {
+        return res.status(400).json({ success: false, message: 'Invalid taqId'});
+      }
+
+      const name = req.query.name;
+      console.log('name-code', name, code);
+      
+      const userDir = getUserDir(taqId);
+      const fileDir = `${userDir}/contracts`;
+      const result = await fs.promises.mkdir(fileDir, { recursive: true });
+      console.log('mkdir-result', result);
+
+      const filePath = `${fileDir}/${name}.py`;
+      console.log('filePath', filePath);
+
+      const buff = Buffer.from(code, 'base64');
+      const codestr = buff.toString('utf-8');
+
+      await fs.promises.writeFile(filePath, codestr);
+
+      if (!await isExists(filePath)) {
+        return res.status(400).json({ message: 'File does not exists'});
+      }
+
+      const configPath = `${userDir}/.taq/config.json`;
+      if (!await isExists(configPath)) {
+        if (!await initTaq(taqId)) {
+          return res.status(400).json({ message: 'Failed to initialize taq'});
+        }
+      }
+
+      const command = `taq compile --configDir ./storage/${taqId}/.taq ${name}.py`
+      console.log('command', command)
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`error: ${error.message}`);
+          return res.json({ success: false, message: error.message })
+        }
+
+        if (stderr && stderr.trim() > 0) {
+          console.error(`stderr: ${stderr}`);
+          return res.json({ success: false, message: stderr })
+        }
+
+        console.log(`stdout:\n${stdout}`);
+        return res.json({ success: true, data: stdout })
+      });
+
+    } catch (ex) {
+      console.error(ex);
+      return res.status(400).json({ message: 'system error' });
+    }
+});
 
 module.exports = router;
