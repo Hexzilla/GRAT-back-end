@@ -14,12 +14,19 @@
     "testsDir": "tests",
     "artifactsDir": "artifacts",
     "environment": {
-        "default": "development",
+        "default": "hangzhounet",
         "development": {
             "networks": [],
             "sandboxes": [
                 "local"
             ],
+            "storage": {}
+        },
+        "hangzhounet": {
+            "networks": [
+                "hangzhounet"
+            ],
+            "sandboxes": [],
             "storage": {}
         }
     },
@@ -48,5 +55,35 @@
             "rpcUrl": "http://localhost:20000"
         }
     },
-    "network": {}
+    "network": {
+        "hangzhounet": {
+            "label": "Hangzhounet",
+            "rpcUrl": "https://hangzhounet.smartpy.io",
+            "protocol": "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx",
+            "faucet": {
+                "pkh": "tz1hmPbNNcaH91bkrYDeyAbUmYzjbPtJjPQR",
+                "mnemonic": [
+                    "laundry",
+                    "misery",
+                    "electric",
+                    "crunch",
+                    "normal",
+                    "dose",
+                    "crop",
+                    "enable",
+                    "analyst",
+                    "ocean",
+                    "possible",
+                    "diet",
+                    "angry",
+                    "annual",
+                    "turn"
+                ],
+                "email": "prrwcvof.wzvtxwvn@teztnets.xyz",
+                "password": "Z3r9xb3lMk",
+                "amount": "63400365950",
+                "activation_code": "85f3881de8e8bf0885b1e3c3d9411619b501e0c6"
+            }
+        }
+    }
 }

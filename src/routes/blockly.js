@@ -76,7 +76,8 @@ router.post(
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const taqId = req.cookies.taqId; //uuidv4();//'4d443421-46da-492f-b8f6-31fc8d7b09bb';
+      //const taqId = req.cookies.taqId; //uuidv4();
+      const taqId = req.body.taqId || uuidv4();
       console.log('taqId', taqId);
       if (!taqId) {
         return res.status(400).json({ success: false, message: 'Invalid taqId'});
@@ -157,44 +158,24 @@ const initTaq = async (taqId) => {
   }
 }
 
-router.get(
-  '/deploy/:name', 
+router.post(
+  '/deploy', 
+  body('name').isString(),
+  body('taqId').isString(),
   async (req, res) => {
     try {
-      const taqId = req.cookies.taqId;
-      console.log('taqId', taqId);
-      if (!taqId) {
-        return res.status(400).json({ success: false, message: 'Invalid taqId'});
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const name = req.query.name;
-      console.log('name-code', name, code);
+      const {name, taqId} = req.body;
+      console.log('contract name', name);
       
       const userDir = getUserDir(taqId);
-      const fileDir = `${userDir}/contracts`;
-      const result = await fs.promises.mkdir(fileDir, { recursive: true });
-      console.log('mkdir-result', result);
+      const fileDir = `${userDir}/artifacts/${name}`;
 
-      const filePath = `${fileDir}/${name}.py`;
-      console.log('filePath', filePath);
-
-      const buff = Buffer.from(code, 'base64');
-      const codestr = buff.toString('utf-8');
-
-      await fs.promises.writeFile(filePath, codestr);
-
-      if (!await isExists(filePath)) {
-        return res.status(400).json({ message: 'File does not exists'});
-      }
-
-      const configPath = `${userDir}/.taq/config.json`;
-      if (!await isExists(configPath)) {
-        if (!await initTaq(taqId)) {
-          return res.status(400).json({ message: 'Failed to initialize taq'});
-        }
-      }
-
-      const command = `taq compile --configDir ./storage/${taqId}/.taq ${name}.py`
+      const command = `SmartPy.sh originate-contract --code ${fileDir}/step_000_cont_0_contract.tz --storage ${fileDir}/step_000_cont_0_storage.tz --rpc https://hangzhounet.smartpy.io`
       console.log('command', command)
       exec(command, (error, stdout, stderr) => {
         if (error) {
