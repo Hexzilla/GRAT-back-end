@@ -182,7 +182,7 @@ router.post(
       const fileDir = `${userDir}/artifacts/${name}`;
 
       const filePath = `${fileDir}/step_000_cont_0_contract.tz`;
-      if (!await isExists(configPath)) {
+      if (!await isExists(filePath)) {
         return res.json({ success: false, message: 'File does not exists' })
       }
 
