@@ -91,7 +91,7 @@ router.post(
       const result = await fs.promises.mkdir(fileDir, { recursive: true });
       console.log('mkdir-result', result);
 
-      const filePath = `${fileDir}/${name}.py`;
+      let filePath = `${fileDir}/${name}.py`;
       console.log('filePath', filePath);
 
       const buff = Buffer.from(code, 'base64');
@@ -112,7 +112,7 @@ router.post(
 
       const command = `taq compile --configDir ./storage/${taqId}/.taq ${name}.py`
       console.log('command', command)
-      exec(command, (error, stdout, stderr) => {
+      exec(command, async (error, stdout, stderr) => {
         if (error) {
           console.error(`error: ${error.message}`);
           return res.json({ success: false, message: error.message })
@@ -124,11 +124,20 @@ router.post(
         }
 
         console.log(`stdout:\n${stdout}`);
+
+        filePath = `${userDir}/artifacts/${name}/step_000_cont_0_contract.json`
+        const contract = await fs.promises.readFile(filePath, 'utf8');
+
+        filePath = `${userDir}/artifacts/${name}/step_000_cont_0_storage.json`
+        const storage = await fs.promises.readFile(filePath, 'utf8');
+
         return res.json({
           success: true,
           data: {
             taqId,
             output: stdout,
+            contract,
+            storage,
           }
         })
       });
