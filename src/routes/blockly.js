@@ -126,9 +126,15 @@ router.post(
         console.log(`stdout:\n${stdout}`);
 
         filePath = `${userDir}/artifacts/${name}/step_000_cont_0_contract.json`
+        if (!await isExists(filePath)) {
+          return res.status(400).json({ message: 'Contract file does not exists'});
+        }
         const contract = await fs.promises.readFile(filePath, 'utf8');
 
         filePath = `${userDir}/artifacts/${name}/step_000_cont_0_storage.json`
+        if (!await isExists(filePath)) {
+          return res.status(400).json({ message: 'Storage file does not exists'});
+        }
         const storage = await fs.promises.readFile(filePath, 'utf8');
 
         return res.json({
