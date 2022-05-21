@@ -67,8 +67,8 @@ router.post(
 
 router.post(
   '/compile', 
-  body('name').isString(),
-  body('code').isString(),
+  body('name').isString().notEmpty(),
+  body('code').isString().notEmpty(),
   async (req, res) => {
     try {
       const errors = validationResult(req);
